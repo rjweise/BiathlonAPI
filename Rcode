@@ -1,0 +1,122 @@
+#Turn on required packages
+require(rjson)
+require(tidyverse)
+require(httr)
+require(jsonlite)
+require(tidyr)
+require(purrr)
+
+#########################################################################
+
+# GET A LIST OF ALL ATHLETES for a season
+Athletes1920W <- GET("http://biathlonresults.com/modules/sportapi/api/Stats?StatisticId=SHOOT_W_A&StatId=SHOOTWC&byWhat=ATH&SeasonId=1920&OrganizerId=&GenderId=W&IBUId=&Nat=")
+Athletes1920W_text <- content(Athletes1920W, "text")
+Athletes1920W_json <- fromJSON(Athletes1920W_text, flatten = TRUE)
+Athletes1920W_df <- as.data.frame(Athletes1920W_json)
+W1920_IBUlist <- as.data.frame(Athletes1920W_df$Rows.IBUId ) # This is a final list of all IBU ID's for all Women athletes in the 2019-2020 season
+NrofRows <- nrow(W1920_IBUlist) # This just counts the number of records / athletes
+
+#########################################################################
+
+# PREP THE DATA FRAME TO STORE DATA
+#Read one Json file for the Athlete Bio headers
+jsonfileHEA <- rjson::fromJSON(file = "http://biathlonresults.com/modules/sportapi/api/CISBios?IBUId=BTGER21103199401")
+
+#create an empty data frame with headers
+Bios <- data.frame(matrix(ncol = 29, ))  #add nrow=NrofRows for "y" if you want to create the exact nr of rows as athletes
+#get the header names from the jsonfileHEA
+  #first 15 headers
+colheads1_4 <-c(names(jsonfileHEA[1:4]))
+colheads7_15 <-c(names(jsonfileHEA[7:15]))
+  #skiing performance headers
+colheads_skiing <-c(names(jsonfileHEA[35]))
+season1 <- c(purrr::flatten(jsonfileHEA[31])[1])
+season2 <- c(purrr::flatten(jsonfileHEA[31])[2])
+season3 <- c(purrr::flatten(jsonfileHEA[31])[3])
+season4 <- c(purrr::flatten(jsonfileHEA[31])[4])
+colheads_skiing1 = paste(colheads_skiing,season1, sep = "")
+colheads_skiing2 = paste(colheads_skiing,season2, sep = "")
+colheads_skiing3 = paste(colheads_skiing,season3, sep = "")
+colheads_skiing4 = paste(colheads_skiing,season4, sep = "")
+  #shooting performance headers
+colheads_shooting <- c(names(jsonfileHEA[32]))
+colheads_shooting1 = paste(colheads_shooting,season1, sep = "")
+colheads_shooting2 = paste(colheads_shooting,season2, sep = "")
+colheads_shooting3 = paste(colheads_shooting,season3, sep = "")
+colheads_shooting4 = paste(colheads_shooting,season4, sep = "")
+  #shootingstanding performance headers
+colheads_shootingS <- c(names(jsonfileHEA[33]))
+colheads_shootingS1 = paste(colheads_shootingS,season1, sep = "")
+colheads_shootingS2 = paste(colheads_shootingS,season2, sep = "")
+colheads_shootingS3 = paste(colheads_shootingS,season3, sep = "")
+colheads_shootingS4 = paste(colheads_shootingS,season4, sep = "")
+  #shootingprone performance headers
+colheads_shootingP <- c(names(jsonfileHEA[34]))
+colheads_shootingP1 = paste(colheads_shootingP,season1, sep = "")
+colheads_shootingP2 = paste(colheads_shootingP,season2, sep = "")
+colheads_shootingP3 = paste(colheads_shootingP,season3, sep = "")
+colheads_shootingP4 = paste(colheads_shootingP,season4, sep = "")
+
+#combine all column headers
+colheads_all <- c(colheads1_4,colheads7_15,colheads_skiing1,colheads_skiing2,colheads_skiing3,colheads_skiing4, 
+                    colheads_shooting1,colheads_shooting2,colheads_shooting3,colheads_shooting4, 
+                    colheads_shootingS1,colheads_shootingS2,colheads_shootingS3,colheads_shootingS4,
+                    colheads_shootingP1,colheads_shootingP2,colheads_shootingP3,colheads_shootingP4)
+
+#remove the non-standard characters
+colheads_all <- gsub("/","",colheads_all)
+
+#Create a data frame to store records for all athletes
+#BiosDF <- as.data.frame(Bios)
+
+#name columns in dataframe based on colheads_all
+colnames(Bios) <- colheads_all
+
+#colnames(BiosDF) <- colheads_all
+
+
+#########################################################################
+
+#THIS IS THE START OF LOOP 1
+
+#1.1 Read IBUId from Athlete list
+index <- 1
+# Set base URL for the Bios
+AthBioBase <- "http://biathlonresults.com/modules/sportapi/api/CISBios?IBUId="
+#Loop through the IBUids one by one
+for (row in 1:NrofRows) {   #using 5 for testing, replace with nrow(W1920_IBUlist) for full list
+  #read IBU ID
+  #row <- 5
+  IBUid <- W1920_IBUlist[row,1]
+  #create the full URL
+  AthBioCall <- paste(AthBioBase, IBUid, sep="")  
+  #1.2 Read the Json file for the Athlete based on IBUId
+  jsonfile <- rjson::fromJSON(file = AthBioCall)
+  #test print(AthBioCall)
+  
+  #1.3 Get the values for the selected Athlete 
+  values <- c(jsonfile[1:4],jsonfile[7:15],
+              (purrr::flatten(jsonfile[35])[1]),(purrr::flatten(jsonfile[35])[2]),(purrr::flatten(jsonfile[35])[3]),(purrr::flatten(jsonfile[35])[4]),
+              (purrr::flatten(jsonfile[32])[1]),(purrr::flatten(jsonfile[32])[2]),(purrr::flatten(jsonfile[32])[3]),(purrr::flatten(jsonfile[32])[4]),
+              (purrr::flatten(jsonfile[33])[1]),(purrr::flatten(jsonfile[33])[2]),(purrr::flatten(jsonfile[33])[3]),(purrr::flatten(jsonfile[33])[4]),
+              (purrr::flatten(jsonfile[34])[1]),(purrr::flatten(jsonfile[34])[2]),(purrr::flatten(jsonfile[34])[3]),(purrr::flatten(jsonfile[34])[4])
+  )
+  
+  #convert values list to dataframe
+  ValuesDF <-data.frame(matrix(unlist(values),nrow=length(values),byrow = F))
+  ValuesDF2 <- do.call(rbind.data.frame,values)
+  #1.4 Add the values into new row
+  
+  Bios[index,] = values
+  
+  #BiosDF <- rbind(BiosDF,values)
+  #add new row
+  
+  #BiosDF[nrow(BiosDF) + 1,]
+  
+  print(index)  
+  #Go to next IBUid until done
+  index <- index+1
+}
+
+write.csv(Bios,"/Users/rjweise/BiathlonR/BiathlonBios.csv", row.names = TRUE)
