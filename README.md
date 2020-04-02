@@ -9,5 +9,7 @@ At this point the result is a csv file with all female athletes of the 2019-2020
 
 The reason for posting this code on Github is mostly to store it somewhere for my own backup, as well as making it available to someone else trying to use R to load this data. I should also note my R skills are pretty low, and I am certain that the script could be written more efficient. But for now, it works for my purpose!
 
+Here's a webpage with a more detailed explanation of the code: https://rjweise.rstudio.cloud/8d78a5a734a945298359d4f4c82d7df9/file_show?path=%2Fcloud%2Fproject%2FBiathlonNotebook.nb.html
+
 If you have a ny comments or questions, please reach out on Twitter: @rjweise
 RJ
