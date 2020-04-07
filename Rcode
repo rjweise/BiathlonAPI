@@ -1,10 +1,19 @@
 #Turn on required packages
+library(rjson)
+library(tidyverse)
+library(httr)
+library(jsonlite)
+library(tidyr)
+library(purrr)
+library(ggplot2)
+
 require(rjson)
 require(tidyverse)
 require(httr)
 require(jsonlite)
 require(tidyr)
 require(purrr)
+require(ggplot2)
 
 #########################################################################
 
@@ -25,10 +34,10 @@ jsonfileHEA <- rjson::fromJSON(file = "http://biathlonresults.com/modules/sporta
 #create an empty data frame with headers
 Bios <- data.frame(matrix(ncol = 29, ))  #add nrow=NrofRows for "y" if you want to create the exact nr of rows as athletes
 #get the header names from the jsonfileHEA
-  #first 15 headers
+#first 15 headers
 colheads1_4 <-c(names(jsonfileHEA[1:4]))
 colheads7_15 <-c(names(jsonfileHEA[7:15]))
-  #skiing performance headers
+#skiing performance headers
 colheads_skiing <-c(names(jsonfileHEA[35]))
 season1 <- c(purrr::flatten(jsonfileHEA[31])[1])
 season2 <- c(purrr::flatten(jsonfileHEA[31])[2])
@@ -38,19 +47,19 @@ colheads_skiing1 = paste(colheads_skiing,season1, sep = "")
 colheads_skiing2 = paste(colheads_skiing,season2, sep = "")
 colheads_skiing3 = paste(colheads_skiing,season3, sep = "")
 colheads_skiing4 = paste(colheads_skiing,season4, sep = "")
-  #shooting performance headers
+#shooting performance headers
 colheads_shooting <- c(names(jsonfileHEA[32]))
 colheads_shooting1 = paste(colheads_shooting,season1, sep = "")
 colheads_shooting2 = paste(colheads_shooting,season2, sep = "")
 colheads_shooting3 = paste(colheads_shooting,season3, sep = "")
 colheads_shooting4 = paste(colheads_shooting,season4, sep = "")
-  #shootingstanding performance headers
+#shootingstanding performance headers
 colheads_shootingS <- c(names(jsonfileHEA[33]))
 colheads_shootingS1 = paste(colheads_shootingS,season1, sep = "")
 colheads_shootingS2 = paste(colheads_shootingS,season2, sep = "")
 colheads_shootingS3 = paste(colheads_shootingS,season3, sep = "")
 colheads_shootingS4 = paste(colheads_shootingS,season4, sep = "")
-  #shootingprone performance headers
+#shootingprone performance headers
 colheads_shootingP <- c(names(jsonfileHEA[34]))
 colheads_shootingP1 = paste(colheads_shootingP,season1, sep = "")
 colheads_shootingP2 = paste(colheads_shootingP,season2, sep = "")
@@ -59,9 +68,9 @@ colheads_shootingP4 = paste(colheads_shootingP,season4, sep = "")
 
 #combine all column headers
 colheads_all <- c(colheads1_4,colheads7_15,colheads_skiing1,colheads_skiing2,colheads_skiing3,colheads_skiing4, 
-                    colheads_shooting1,colheads_shooting2,colheads_shooting3,colheads_shooting4, 
-                    colheads_shootingS1,colheads_shootingS2,colheads_shootingS3,colheads_shootingS4,
-                    colheads_shootingP1,colheads_shootingP2,colheads_shootingP3,colheads_shootingP4)
+                  colheads_shooting1,colheads_shooting2,colheads_shooting3,colheads_shooting4, 
+                  colheads_shootingS1,colheads_shootingS2,colheads_shootingS3,colheads_shootingS4,
+                  colheads_shootingP1,colheads_shootingP2,colheads_shootingP3,colheads_shootingP4)
 
 #remove the non-standard characters
 colheads_all <- gsub("/","",colheads_all)
@@ -119,4 +128,89 @@ for (row in 1:NrofRows) {   #using 5 for testing, replace with nrow(W1920_IBUlis
   index <- index+1
 }
 
-write.csv(Bios,"/Users/rjweise/BiathlonR/BiathlonBios.csv", row.names = TRUE)
+write.csv(Bios,"BiathlonBios.csv", row.names = TRUE)
+
+
+# creating data subsets for further analysis 
+#create subset with ski and shooting statistics for 2019-2020
+BiosStats1920 <- Bios[,c(1,2,14,18,22,26)]
+#clean % symbols
+BiosStats1920[,3] <- parse_number(BiosStats1920[,c(3)])
+BiosStats1920[,4] <- parse_number(BiosStats1920[,c(4)])
+BiosStats1920[,5] <- parse_number(BiosStats1920[,c(5)])
+BiosStats1920[,6] <- parse_number(BiosStats1920[,c(6)])
+
+#create subset with skiing stats for 2016-2017 to 2019-2020
+BiosStatsSki <- Bios[,c(1,2,14,15,16,17)]
+#clean % symbols
+BiosStatsSki[,3] <- parse_number(BiosStatsSki[,c(3)])
+BiosStatsSki[,4] <- parse_number(BiosStatsSki[,c(4)])
+BiosStatsSki[,5] <- parse_number(BiosStatsSki[,c(5)])
+BiosStatsSki[,6] <- parse_number(BiosStatsSki[,c(6)])
+
+#reshaping (pivot) the data to enable line charts
+library(reshape2)
+require(reshape2)
+BiosStatsSkiV <- melt(BiosStatsSki, id=(c("IBUId", "FullName")))
+BiosStatsShootV <- melt(BiosStatsShoot, id=(c("IBUId", "FullName")))
+BiosStatsStandV <- melt(BiosStatsStand, id=(c("IBUId", "FullName")))
+BiosStatsProneV <- melt(BiosStatsProne, id=(c("IBUId", "FullName")))
+
+#create subset with shooting stats for 2016-2017 to 2019-2020
+BiosStatsShoot <- Bios[,c(1,2,18,19,20,21)]
+#clean % symbols
+BiosStatsShoot[,3] <- parse_number(BiosStatsShoot[,c(3)])
+BiosStatsShoot[,4] <- parse_number(BiosStatsShoot[,c(4)])
+BiosStatsShoot[,5] <- parse_number(BiosStatsShoot[,c(5)])
+BiosStatsShoot[,6] <- parse_number(BiosStatsShoot[,c(6)])
+
+#create subset with standing shooting stats for 2016-2017 to 2019-2020
+BiosStatsStand <- Bios[,c(1,2,26,27,28,29)]
+#clean % symbols
+BiosStatsStand[,3] <- parse_number(BiosStatsStand[,c(3)])
+BiosStatsStand[,4] <- parse_number(BiosStatsStand[,c(4)])
+BiosStatsStand[,5] <- parse_number(BiosStatsStand[,c(5)])
+BiosStatsStand[,6] <- parse_number(BiosStatsStand[,c(6)])
+
+#create subset with prone shooting stats for 2016-2017 to 2019-2020
+BiosStatsProne <- Bios[,c(1,2,22,23,24,25)]
+#clean % symbols
+BiosStatsProne[,3] <- parse_number(BiosStatsProne[,c(3)])
+BiosStatsProne[,4] <- parse_number(BiosStatsProne[,c(4)])
+BiosStatsProne[,5] <- parse_number(BiosStatsProne[,c(5)])
+BiosStatsProne[,6] <- parse_number(BiosStatsProne[,c(6)])
+
+# Making some charts
+  #Ski stats
+#graph for shooting stats for one selected athlete
+Testshoot <- BiosStatsShootV[c(6,149,292,435),1:4]
+  ggplot(data = Testshoot, mapping = aes(x=variable ,y=value, group=FullName  )) +
+    geom_path(color = "#0097c9")+
+    #geom_line(color = "#94db18", linetype = "dashed")+
+    geom_point()+
+    geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
+    theme_minimal()
+
+  #Shooting stats
+  ggplot(data = BiosStatsShootV, mapping = aes(x=variable ,y=value, group=FullName  )) +
+    geom_path(color = "#0097c9")+
+    #geom_line(color = "#94db18", linetype = "dashed")+
+    geom_point(color = "#0097c9")+
+    theme_minimal()
+
+  #Standing shooting stats
+  ggplot(data = BiosStatsStandV, mapping = aes(x=variable ,y=value, group=FullName  )) +
+    geom_path(color = "#0097c9")+
+    #geom_line(color = "#94db18", linetype = "dashed")+
+    geom_point(color = "#0097c9")+
+    theme_minimal()
+
+  #Prone shooting stats
+  ggplot(data = BiosStatsProneV, mapping = aes(x=variable ,y=value, group=FullName  )) +
+    geom_path(color = "#0097c9")+
+    #geom_line(color = "#94db18", linetype = "dashed")+
+    geom_point(color = "#0097c9")+
+    theme_minimal()
+    
+# trying to add the average per variable
+aggregate(x = as.integer(BiosStatsSkiV$value), by=list(BiosStatsSkiV$variable), FUN = 'mean', na.rm=TRUE)
