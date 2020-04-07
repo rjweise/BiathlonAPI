@@ -131,9 +131,11 @@ for (row in 1:NrofRows) {   #using 5 for testing, replace with nrow(W1920_IBUlis
 write.csv(Bios,"BiathlonBios.csv", row.names = TRUE)
 
 
-# creating data subsets for further analysis 
+# creating data subsets for further analysis )
+
 #create subset with ski and shooting statistics for 2019-2020
 BiosStats1920 <- Bios[,c(1,2,14,18,22,26)]
+
 #clean % symbols
 BiosStats1920[,3] <- parse_number(BiosStats1920[,c(3)])
 BiosStats1920[,4] <- parse_number(BiosStats1920[,c(4)])
@@ -155,6 +157,7 @@ BiosStatsSkiV <- melt(BiosStatsSki, id=(c("IBUId", "FullName")))
 BiosStatsShootV <- melt(BiosStatsShoot, id=(c("IBUId", "FullName")))
 BiosStatsStandV <- melt(BiosStatsStand, id=(c("IBUId", "FullName")))
 BiosStatsProneV <- melt(BiosStatsProne, id=(c("IBUId", "FullName")))
+BiosStatsSkiV <- BiosStatsSkiV[order(BiosStatsSkiV$variable ,decreasing = TRUE),]
 
 #create subset with shooting stats for 2016-2017 to 2019-2020
 BiosStatsShoot <- Bios[,c(1,2,18,19,20,21)]
