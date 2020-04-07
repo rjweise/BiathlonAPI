@@ -1,0 +1,126 @@
+# PACKAGES
+library(dplyr)
+require(dplyr)
+
+# LOADING DATA
+# The data is created with a R code file called BiathlonAPI.R
+# Assuming that has run, we're brining in the created data sources here:
+BiosStatsSkiV <- BiosStatsSkiV
+BiosStatsShootV <- BiosStatsShootV
+BiosStatsProneV <- BiosStatsProneV
+BiosStatsStandV <- BiosStatsStandV
+
+# USER INTERFACE
+ui = pageWithSidebar(
+  
+  headerPanel("Women of Biathlon"),
+  
+  sidebarPanel(
+    selectizeInput('var1', 'Select an athlete below:', choices = c("click to see list; type name to filter" = "", Bios$FullName, selected = 1))
+    , "After you select an athlete, it will show a few tables and a picture on the right"
+    , br()
+    , br()
+    #, textOutput("address1") 
+    , "Nation's flag"
+    , htmlOutput("inc2")
+    ),
+  
+  # This puts all the objects on the page in the main panel
+  mainPanel(
+    tableOutput("table1"),
+    #tableOutput("table2"),
+    #tableOutput("table3"),
+    htmlOutput("inc"),
+    plotOutput("plotski")
+    #htmlOutput("inc2")
+  )
+)
+
+
+# SERVER SIDE
+server = function(input, output, session) {
+
+    # Show a table with the desired fields for the selected athlete  
+  tab <- reactive({
+    Bios[1:143,1:9] %>%
+      filter(FullName == input$var1) #%>% 
+    #filter(NAT == input$var2) %>% 
+    #filter(Age == input$var3)
+  })
+
+  # Get the photo url for the selected athlete  
+  address <- reactive({
+    Bios %>% select(2,12) %>%  
+      filter(FullName == input$var1) %>% select(2)
+  }) 
+  
+  # Get the flag url for the selected athlete
+  flag <- reactive({
+    Bios %>% select(2,13) %>%  
+      filter(FullName == input$var1) %>% select(2)
+  }) 
+  
+  # Get the picture of the selected athlete (like "https://ibu.blob.core.windows.net/docs/athletes/BTGER21103199401.png")
+      getPage <- function() {
+    return(tags$iframe(src = address() 
+                       , style="width:100%;",  frameborder="0"
+                       ,id="iframe"
+                       , height = "500px"))
+      }
+
+  # Get the flag picture for the selected athlete (like "https://info.blob.core.windows.net/resources/bt/flags/ger.png")     
+      getPage2 <- function() {
+        return(tags$iframe(src = flag () 
+                           , style="width:30%;",  frameborder="0"
+                           ,id="iframe"
+                           , height = "50px"))
+      }
+
+  # Get the skiing statistics data for only the selected athlete
+      skierstats <- reactive({
+        BiosStatsSkiV %>% 
+          filter(FullName == input$var1)
+      })
+      # example of how it works in R: Tshoot <- BiosStatsShootV %>% filter(FullName == "Veronika MACHYNIAKOVA")
+      
+      
+  # Render the table for tab    
+  output$table1 <- renderTable({
+    tab()
+  })
+  # Render the table for address     
+  #output$table2 <- renderTable({
+  #  address()
+  #})
+  # Render the table for flag   
+  #output$table3 <- renderTable({
+  #  flag()
+  #})
+  # Render the iframe for getPage (athlete picture)   
+  output$inc <- renderUI({
+    x <- input$var1  
+    getPage()
+  })
+  # Render the iframe for getPage2 (athlete's nation flag)   
+  output$inc2 <- renderUI({
+    x <- input$var1  
+    getPage2()
+  })
+  # Render the record for address   
+  output$address1 <- renderPrint({
+    address()
+  })
+  
+  #output$chart1
+  output$plotski <-renderPlot({
+  ggplot(data = skierstats(), mapping = aes(x=variable ,y=value, group=FullName)) +
+    geom_path(color = "#0097c9")+
+    geom_point()+
+    geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
+    theme_minimal()+
+    ylim(-5,5)
+  })
+}
+
+# SHINY MAGIC
+shinyApp(ui = ui, server = server) # this launches your app
