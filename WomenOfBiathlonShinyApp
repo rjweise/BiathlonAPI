@@ -4,7 +4,7 @@ require(dplyr)
 
 # LOADING DATA
 # The data is created with a R code file called BiathlonAPI.R
-# Assuming that has run, we're brining in the created data sources here:
+# Assuming that has run, we're bringing in the created data sources here:
 BiosStatsSkiV <- BiosStatsSkiV
 BiosStatsShootV <- BiosStatsShootV
 BiosStatsProneV <- BiosStatsProneV
@@ -16,7 +16,7 @@ ui = pageWithSidebar(
   headerPanel("Women of Biathlon"),
   
   sidebarPanel(
-    selectizeInput('var1', 'Select an athlete below:', choices = c("click to see list; type name to filter" = "", Bios$FullName, selected = 1))
+    selectizeInput('var1', 'Select an athlete below:', choices = c("click to see list; type name to filter" = "", Bios$FullName, selected = NULL))
     , "After you select an athlete, it will show a few tables and a picture on the right"
     , br()
     , br()
@@ -28,10 +28,12 @@ ui = pageWithSidebar(
   # This puts all the objects on the page in the main panel
   mainPanel(
     tableOutput("table1"),
+    tags$hr(),
     #tableOutput("table2"),
     #tableOutput("table3"),
     htmlOutput("inc"),
-    plotOutput("plotski")
+    plotOutput("plotski"),
+    plotOutput("plotski2")
     #htmlOutput("inc2")
   )
 )
@@ -81,7 +83,11 @@ server = function(input, output, session) {
         BiosStatsSkiV %>% 
           filter(FullName == input$var1)
       })
-      # example of how it works in R: Tshoot <- BiosStatsShootV %>% filter(FullName == "Veronika MACHYNIAKOVA")
+      # Get the skiing statistics data for only the selected athlete
+      shootingstats <- reactive({
+        BiosStatsShootV %>% 
+          filter(FullName == input$var1)
+      })
       
       
   # Render the table for tab    
@@ -114,11 +120,23 @@ server = function(input, output, session) {
   #output$chart1
   output$plotski <-renderPlot({
   ggplot(data = skierstats(), mapping = aes(x=variable ,y=value, group=FullName)) +
+    scale_x_discrete(limits=c("StatSkiing1617", "StatSkiing1718", "StatSkiing1819", "StatSkiing1920"))+
     geom_path(color = "#0097c9")+
     geom_point()+
     geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
     theme_minimal()+
-    ylim(-5,5)
+    ylim(5,-5)
+  })
+  
+  #outputchart2
+  output$plotski2 <- renderPlot({
+    ggplot(data = shootingstats(), mapping = aes(x=variable ,y=value, group=FullName)) +
+      scale_x_discrete(limits=c("StatShooting1617", "StatShooting1718", "StatShooting1819", "StatShooting1920"))+
+      geom_path(color = "#0097c9")+
+      geom_point()+
+      geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
+      theme_minimal()+
+      ylim(65,100)
   })
 }
 
