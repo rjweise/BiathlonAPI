@@ -24,9 +24,9 @@ BiosStatsStandV <- BiosStatsStandVr[,2:5]
 
 # USER INTERFACE
 ui = fluidPage(
-    
-    headerPanel("Women of Biathlon"),
-    #headerPanel(as.character(Bios$FullName)),
+    tags$h1("Women of Biathlon"),
+    tags$h3("A tool for exploring the female biathlon athletes bios and their stats"),
+
     sidebarPanel(
         selectizeInput(inputId = 'var1', label='Select an athlete below:', choices = c("click to see list; type name to filter" = "", as.character(Bios$FullName)), multiple = FALSE,  selected = "Denise HERRMANN")
         , "After you select an athlete, it will show a few tables and a picture on the right"
@@ -34,23 +34,36 @@ ui = fluidPage(
         , br()
         #, textOutput("address1") 
         , "Nation's flag"
-        , htmlOutput("inc")
         , htmlOutput("inc2")
+        , htmlOutput("inc")
+        ,fluidRow(
+            tableOutput("table1"),
+            tags$hr()
+        )
     ),
     
     # This puts all the objects on the page in the main panel
     mainPanel(
-        tableOutput("table1"),
+        
+        fluidRow(
+                column(4,"Relative skiing performance"),    
+                column(4,"Shooting performance")    
+        ),
+        fluidRow(
+                column(4,plotOutput("plotski")),
+                column(4,plotOutput("plotski2"))
+        ),
         tags$hr(),
-        #tableOutput("table2"),
-        #tableOutput("table3"),
-        #htmlOutput("inc"),
-        plotOutput("plotski"),
-        plotOutput("plotski2"),
-        plotOutput("plotski3"),
-        plotOutput("plotski4")
-        #htmlOutput("inc2")
-    )
+        fluidRow(
+            column(4,"Prone shooting performance"),    
+            column(4,"Standing shooting performance")    
+        ),
+        fluidRow(
+                column(4,plotOutput("plotski3")),
+                column(4,plotOutput("plotski4"))
+        )
+    ),
+    tags$p("All data is from the ", tags$a(href="https://biathlonresults.com/", "IBU's Biathlon Result website"))
 )
 
 
@@ -59,7 +72,7 @@ server = function(input, output, session) {
     
     # Show a table with the desired fields for the selected athlete  
     tab <- reactive({
-        Bios[1:143,1:9] %>%
+        Bios[1:143,c(1,2,5,8)] %>%
             filter(as.character(FullName) == as.character(input$var1)) #%>% 
         #filter(NAT == input$var2) %>% 
         #filter(Age == input$var3)
@@ -145,10 +158,10 @@ server = function(input, output, session) {
     
     #output$chart1
     output$plotski <-renderPlot({
-        ggplot(data = skierstats(), mapping = aes(x=variable ,y=value, group=FullName)) +
+        ggplot(data = skierstats(), mapping = aes(x=variable ,y=value, group=FullName, size = 0.2)) +
             scale_x_discrete(limits=c("StatSkiing1617", "StatSkiing1718", "StatSkiing1819", "StatSkiing1920"))+
-            geom_path(color = "#0097c9")+
-            geom_point()+
+            geom_path(color = "#0097c9", show.legend=FALSE)+
+            geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue")+
             geom_hline(yintercept =5, color="red")+
             geom_hline(yintercept =-5, color="green")+
@@ -158,10 +171,10 @@ server = function(input, output, session) {
     
     #outputchart2
     output$plotski2 <- renderPlot({
-        ggplot(data = shootingstats(), mapping = aes(x=variable ,y=value, group=FullName)) +
+        ggplot(data = shootingstats(), mapping = aes(x=variable ,y=value, group=FullName, size = 0.5)) +
             scale_x_discrete(limits=c("StatShooting1617", "StatShooting1718", "StatShooting1819", "StatShooting1920"))+
-            geom_path(color = "#0097c9")+
-            geom_point()+
+            geom_path(color = "#0097c9",show.legend=FALSE)+
+            geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
             theme_minimal()+
             ylim(65,100)
@@ -169,10 +182,10 @@ server = function(input, output, session) {
     
     #outputchart2
     output$plotski3 <- renderPlot({
-        ggplot(data = pronestats(), mapping = aes(x=variable ,y=value, group=FullName)) +
+        ggplot(data = pronestats(), mapping = aes(x=variable ,y=value, group=FullName, size = 1)) +
             scale_x_discrete(limits=c("StatShootingProne1617", "StatShootingProne1718", "StatShootingProne1819", "StatShootingProne1920"))+
-            geom_path(color = "#0097c9")+
-            geom_point()+
+            geom_path(color = "#0097c9",show.legend=FALSE)+
+            geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
             theme_minimal()+
             ylim(65,100)
@@ -180,10 +193,10 @@ server = function(input, output, session) {
     
     #outputchart2
     output$plotski4 <- renderPlot({
-        ggplot(data = standingstats(), mapping = aes(x=variable ,y=value, group=FullName)) +
+        ggplot(data = standingstats(), mapping = aes(x=variable ,y=value, group=FullName, size = 1)) +
             scale_x_discrete(limits=c("StatShootingStanding1617", "StatShootingStanding1718", "StatShootingStanding1819", "StatShootingStanding1920"))+
-            geom_path(color = "#0097c9")+
-            geom_point()+
+            geom_path(color = "#0097c9",show.legend=FALSE)+
+            geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
             theme_minimal()+
             ylim(65,100)
