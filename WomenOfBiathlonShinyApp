@@ -7,8 +7,6 @@ library(rsconnect)
 rsconnect::setAccountInfo(name='rjweise', token='7E21A201D313E81B4C8C7F5C5A6281E2', secret='g6SjLX8pTXYOHuJXz97BWBPho+Zsvny1UJgTS3iU')
 #rsconnect::deployApp('WomenOfBiathlon')
 
-setwd("/cloud/project/WomenOfBiathlon")
-
 # LOADING DATA
 # The data is created with a R code file called BiathlonAPI.R
 # Assuming that has run, we're bringing in the created data sources here:
@@ -36,6 +34,7 @@ ui = fluidPage(
         , br()
         #, textOutput("address1") 
         , "Nation's flag"
+        , htmlOutput("inc")
         , htmlOutput("inc2")
     ),
     
@@ -45,9 +44,11 @@ ui = fluidPage(
         tags$hr(),
         #tableOutput("table2"),
         #tableOutput("table3"),
-        htmlOutput("inc"),
+        #htmlOutput("inc"),
         plotOutput("plotski"),
-        plotOutput("plotski2")
+        plotOutput("plotski2"),
+        plotOutput("plotski3"),
+        plotOutput("plotski4")
         #htmlOutput("inc2")
     )
 )
@@ -97,11 +98,22 @@ server = function(input, output, session) {
         BiosStatsSkiV %>% 
             filter(FullName == input$var1)
     })
-    # Get the skiing statistics data for only the selected athlete
+    # Get the shooting statistics data for only the selected athlete
     shootingstats <- reactive({
         BiosStatsShootV %>% 
             filter(FullName == input$var1)
     })
+    # Get the prone shooting statistics data for only the selected athlete
+    pronestats <- reactive({
+        BiosStatsProneV %>% 
+            filter(FullName == input$var1)
+    })
+    # Get the standing shooting statistics data for only the selected athlete
+    standingstats <- reactive({
+        BiosStatsStandV %>% 
+            filter(FullName == input$var1)
+    })
+    
     
     
     # Render the table for tab    
@@ -148,6 +160,28 @@ server = function(input, output, session) {
     output$plotski2 <- renderPlot({
         ggplot(data = shootingstats(), mapping = aes(x=variable ,y=value, group=FullName)) +
             scale_x_discrete(limits=c("StatShooting1617", "StatShooting1718", "StatShooting1819", "StatShooting1920"))+
+            geom_path(color = "#0097c9")+
+            geom_point()+
+            geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
+            theme_minimal()+
+            ylim(65,100)
+    })
+    
+    #outputchart2
+    output$plotski3 <- renderPlot({
+        ggplot(data = pronestats(), mapping = aes(x=variable ,y=value, group=FullName)) +
+            scale_x_discrete(limits=c("StatShootingProne1617", "StatShootingProne1718", "StatShootingProne1819", "StatShootingProne1920"))+
+            geom_path(color = "#0097c9")+
+            geom_point()+
+            geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
+            theme_minimal()+
+            ylim(65,100)
+    })
+    
+    #outputchart2
+    output$plotski4 <- renderPlot({
+        ggplot(data = standingstats(), mapping = aes(x=variable ,y=value, group=FullName)) +
+            scale_x_discrete(limits=c("StatShootingStanding1617", "StatShootingStanding1718", "StatShootingStanding1819", "StatShootingStanding1920"))+
             geom_path(color = "#0097c9")+
             geom_point()+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
