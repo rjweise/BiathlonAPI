@@ -30,6 +30,7 @@ ui = fluidPage(
     tags$h1("Women of Biathlon"),
     tags$h3("A tool for exploring the female biathlon athletes bios and their stats"),
 
+    fluidRow(
     sidebarPanel(
         selectizeInput(inputId = 'var1', label='Select an athlete below:', choices = c("click to see list; type name to filter" = "", as.character(Bios$FullName)), multiple = FALSE,  selected = "Denise HERRMANN")
         , "After you select an athlete, it will show a few tables and a picture on the right"
@@ -64,12 +65,20 @@ ui = fluidPage(
         fluidRow(
                 column(4,plotOutput("plotski3")),
                 column(4,plotOutput("plotski4"))
-        ),
-        fluidRow(
-            plotOutput("plotski5")
         )
     ),
-    tags$p("All data is from the ", tags$a(href="https://biathlonresults.com/", "IBU's Biathlon Result website"))
+    ),
+    tags$hr(),
+    tags$hr(),
+    
+    fluidRow(
+        plotOutput("plotski5")
+    ),
+    fluidRow()
+    ,
+    fluidRow(
+        tags$p("All data is from the ", tags$a(href="https://biathlonresults.com/", "IBU's Biathlon Result website"))
+    )
 )
 
 
@@ -185,8 +194,7 @@ server = function(input, output, session) {
             geom_path(color = "#0097c9",show.legend=FALSE)+
             geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
-            theme_minimal()+
-            ylim(65,100)
+            theme_minimal()
     })
     
     #outputchart3
@@ -196,8 +204,7 @@ server = function(input, output, session) {
             geom_path(color = "#0097c9",show.legend=FALSE)+
             geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
-            theme_minimal()+
-            ylim(65,100)
+            theme_minimal()
     })
     
     #outputchart4
@@ -207,13 +214,12 @@ server = function(input, output, session) {
             geom_path(color = "#0097c9",show.legend=FALSE)+
             geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
-            theme_minimal()+
-            ylim(0,100)
+            theme_minimal()
     })
     
     #outputchart5
     output$plotski5 <- renderPlot({
-        ggplot(data = shootingcombostats(), aes(x = season, group=FullName)) + 
+        ggplot(data = shootingcombostats(), aes(x = as.character(season), group=FullName)) + 
             #adding lines
             geom_line(lineend="round",color="#009CD9",aes(y = ShootTTL,colour = "Total", linetype = "solid", size=1.04, alpha=0.4)) + 
             geom_line(lineend="round",color="#D8E935",aes(y = ShootPRO,colour = "Prone", linetype = "solid", size=1.005, alpha=0.4)) +
@@ -224,12 +230,12 @@ server = function(input, output, session) {
             geom_point(color="#A2BF15",aes(y = ShootSTA,colour = "Standing", size=1, alpha=0.4))+
             #background them
             theme_minimal()+
-            geom_text(aes(x=season, y=ShootTTL, label=ShootTTL, size=1.02))+
-            geom_text(aes(x=season, y=ShootPRO, label=ShootPRO, size=1.005))+
-            geom_text(aes(x=season, y=ShootSTA, label=ShootSTA, size=1.005))+
-            geom_text(color="#009CD9", aes(x=season, y=ShootTTL, label=ifelse(as.character(season) == "1920", "Total",""), size=1.02, hjust = -0.25))+
-            geom_text(color="#D8E935", aes(x=season, y=ShootPRO, label=ifelse(as.character(season) == "1920", "Prone",""), size=1.008, hjust = -0.25))+
-            geom_text(color="#A2BF15", aes(x=season, y=ShootSTA, label=ifelse(as.character(season) == "1920", "Standing",""), size=1.008, hjust = -0.25))+
+            geom_text(aes(x=as.character(season), y=ShootTTL, label=ShootTTL, size=1.02))+
+            geom_text(aes(x=as.character(season), y=ShootPRO, label=ShootPRO, size=1.005))+
+            geom_text(aes(x=as.character(season), y=ShootSTA, label=ShootSTA, size=1.005))+
+            geom_text(color="#009CD9", aes(x=as.character(season), y=ShootTTL, label=ifelse(as.character(season) == "1920", "Total",""), size=1.02, hjust = -0.25))+
+            geom_text(color="#D8E935", aes(x=as.character(season), y=ShootPRO, label=ifelse(as.character(season) == "1920", "Prone",""), size=1.008, hjust = -0.25))+
+            geom_text(color="#A2BF15", aes(x=as.character(season), y=ShootSTA, label=ifelse(as.character(season) == "1920", "Standing",""), size=1.008, hjust = -0.25))+
             guides(size=FALSE)+
             guides(alpha=FALSE)+
             guides(linetype=FALSE)+
