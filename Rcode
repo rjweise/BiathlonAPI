@@ -142,22 +142,6 @@ BiosStatsSki[,4] <- parse_number(BiosStatsSki[,c(4)])
 BiosStatsSki[,5] <- parse_number(BiosStatsSki[,c(5)])
 BiosStatsSki[,6] <- parse_number(BiosStatsSki[,c(6)])
 
-#reshaping (pivot) the data to enable line charts
-library(reshape2)
-require(reshape2)
-BiosStatsSkiV <- melt(BiosStatsSki, id=(c("IBUId", "FullName")))
-BiosStatsShootV <- melt(BiosStatsShoot, id=(c("IBUId", "FullName")))
-BiosStatsStandV <- melt(BiosStatsStand, id=(c("IBUId", "FullName")))
-BiosStatsProneV <- melt(BiosStatsProne, id=(c("IBUId", "FullName")))
-BiosStatsSkiV <- BiosStatsSkiV[order(BiosStatsSkiV$variable ,decreasing = TRUE),]
-
-# Write these file to the working directory
-write.csv(Bios, "Bios.csv", row.names = TRUE)
-write.csv(BiosStatsSkiV, "BiosStatsSkiV.csv", row.names = TRUE)
-write.csv(BiosStatsShootV, "BiosStatsShootV.csv", row.names = TRUE)
-write.csv(BiosStatsProneV, "BiosStatsProneV.csv", row.names = TRUE)
-write.csv(BiosStatsStandV, "BiosStatsStandV.csv", row.names = TRUE)
-
 #create subset with shooting stats for 2016-2017 to 2019-2020
 BiosStatsShoot <- Bios[,c(1,2,18,19,20,21)]
 #clean % symbols
@@ -181,6 +165,22 @@ BiosStatsProne[,3] <- parse_number(BiosStatsProne[,c(3)])
 BiosStatsProne[,4] <- parse_number(BiosStatsProne[,c(4)])
 BiosStatsProne[,5] <- parse_number(BiosStatsProne[,c(5)])
 BiosStatsProne[,6] <- parse_number(BiosStatsProne[,c(6)])
+
+#reshaping (pivot) the data to enable line charts
+library(reshape2)
+require(reshape2)
+BiosStatsSkiV <- melt(BiosStatsSki, id=(c("IBUId", "FullName")))
+BiosStatsShootV <- melt(BiosStatsShoot, id=(c("IBUId", "FullName")))
+BiosStatsStandV <- melt(BiosStatsStand, id=(c("IBUId", "FullName")))
+BiosStatsProneV <- melt(BiosStatsProne, id=(c("IBUId", "FullName")))
+BiosStatsSkiV <- BiosStatsSkiV[order(BiosStatsSkiV$variable ,decreasing = TRUE),]
+
+# Write these file to the working directory
+write.csv(Bios, "Bios.csv", row.names = TRUE)
+write.csv(BiosStatsSkiV, "BiosStatsSkiV.csv", row.names = TRUE)
+write.csv(BiosStatsShootV, "BiosStatsShootV.csv", row.names = TRUE)
+write.csv(BiosStatsProneV, "BiosStatsProneV.csv", row.names = TRUE)
+write.csv(BiosStatsStandV, "BiosStatsStandV.csv", row.names = TRUE)
 
 # Making some charts
   #Ski stats
@@ -245,7 +245,7 @@ aggregate(x = as.integer(BiosStatsSkiV$value), by=list(BiosStatsSkiV$variable), 
 # filtering to one athlete
     OneBio <- subset(BiosStatsShootingTtlProStaV, FullName == "Tiril ECKHOFF")
 #chart
-    ggplot(data = OneBio, aes(x = season, group=FullName)) + 
+    ggplot(data = OneBio, aes(x = as.character(season), group=FullName)) + 
       #adding lines
       geom_line(lineend="round",color="#009CD9",aes(y = ShootTTL,colour = "Total", linetype = "solid", size=1.04, alpha=0.4)) + 
       geom_line(lineend="round",color="#D8E935",aes(y = ShootPRO,colour = "Prone", linetype = "solid", size=1.005, alpha=0.4)) +
@@ -256,12 +256,12 @@ aggregate(x = as.integer(BiosStatsSkiV$value), by=list(BiosStatsSkiV$variable), 
       geom_point(color="#A2BF15",aes(y = ShootSTA,colour = "Standing", size=1, alpha=0.4))+
       #background them
       theme_minimal()+
-      geom_text(aes(x=season, y=ShootTTL, label=ShootTTL, size=1.02))+
-      geom_text(aes(x=season, y=ShootPRO, label=ShootPRO, size=1.005))+
-      geom_text(aes(x=season, y=ShootSTA, label=ShootSTA, size=1.005))+
-      geom_text(color="#009CD9", aes(x=season, y=ShootTTL, label=ifelse(as.character(season) == "1920", "Total",""), size=1.02, hjust = -0.25))+
-      geom_text(color="#D8E935", aes(x=season, y=ShootPRO, label=ifelse(as.character(season) == "1920", "Prone",""), size=1.008, hjust = -0.25))+
-      geom_text(color="#A2BF15", aes(x=season, y=ShootSTA, label=ifelse(as.character(season) == "1920", "Standing",""), size=1.008, hjust = -0.25))+
+      geom_text(aes(x=as.character(season), y=ShootTTL, label=ShootTTL, size=1.02))+
+      geom_text(aes(x=as.character(season), y=ShootPRO, label=ShootPRO, size=1.005))+
+      geom_text(aes(x=as.character(season), y=ShootSTA, label=ShootSTA, size=1.005))+
+      geom_text(color="#009CD9", aes(x=as.character(season), y=ShootTTL, label=ifelse(as.character(season) == "1920", "Total",""), size=1.02, hjust = -0.25))+
+      geom_text(color="#D8E935", aes(x=as.character(season), y=ShootPRO, label=ifelse(as.character(season) == "1920", "Prone",""), size=1.008, hjust = -0.25))+
+      geom_text(color="#A2BF15", aes(x=as.character(season), y=ShootSTA, label=ifelse(as.character(season) == "1920", "Standing",""), size=1.008, hjust = -0.25))+
       guides(size=FALSE)+
       guides(alpha=FALSE)+
       guides(linetype=FALSE)+
