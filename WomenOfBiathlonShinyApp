@@ -14,13 +14,16 @@ rsconnect::setAccountInfo(name='rjweise', token='7E21A201D313E81B4C8C7F5C5A6281E
 Biosr <- read.csv("Bios.csv", colClasses = c("FullName"="character", "PhotoURI"="character", "FlagURI"="character"),header = TRUE)
 Bios <- Biosr[,2:30]
 BiosStatsSkiVr <- read.csv("BiosStatsSkiV.csv", header = TRUE)
-BiosStatsSkiV <- BiosStatsSkiVr[,2:5]
+BiosStatsSkiV <- BiosStatsSkiVr[,2:5] # removing the first column that got added by R
 BiosStatsShootVr <- read.csv("BiosStatsShootV.csv", header = TRUE)
-BiosStatsShootV <- BiosStatsShootVr[,2:5]
+BiosStatsShootV <- BiosStatsShootVr[,2:5] # removing the first column that got added by R
 BiosStatsProneVr <- read.csv("BiosStatsProneV.csv", header = TRUE)
-BiosStatsProneV <- BiosStatsProneVr[,2:5]
+BiosStatsProneV <- BiosStatsProneVr[,2:5] # removing the first column that got added by R
 BiosStatsStandVr <- read.csv("BiosStatsStandV.csv", header = TRUE)
-BiosStatsStandV <- BiosStatsStandVr[,2:5]
+BiosStatsStandV <- BiosStatsStandVr[,2:5] # removing the first column that got added by R
+BiosStatsShootingTtlProStaV <- read.csv("BiosStatsShootingTtlProStaV.csv", header = TRUE)
+BiosStatsShootingTtlProStaV <- BiosStatsShootingTtlProStaV[,2:7]# removing the first column that got added by R
+BiosStatsShootingTtlProStaV$FullName <- as.character(BiosStatsShootingTtlProStaV$FullName) # Convert FullName to character
 
 # USER INTERFACE
 ui = fluidPage(
@@ -61,6 +64,9 @@ ui = fluidPage(
         fluidRow(
                 column(4,plotOutput("plotski3")),
                 column(4,plotOutput("plotski4"))
+        ),
+        fluidRow(
+            plotOutput("plotski5")
         )
     ),
     tags$p("All data is from the ", tags$a(href="https://biathlonresults.com/", "IBU's Biathlon Result website"))
@@ -126,9 +132,12 @@ server = function(input, output, session) {
         BiosStatsStandV %>% 
             filter(FullName == input$var1)
     })
-    
-    
-    
+    # Get the three-in-one shooting statistics data for only the selected athlete
+    shootingcombostats <- reactive({
+        BiosStatsShootingTtlProStaV %>% 
+            filter(FullName == input$var1)
+    })
+
     # Render the table for tab    
     output$table1 <- renderTable({
         tab()
@@ -180,7 +189,7 @@ server = function(input, output, session) {
             ylim(65,100)
     })
     
-    #outputchart2
+    #outputchart3
     output$plotski3 <- renderPlot({
         ggplot(data = pronestats(), mapping = aes(x=variable ,y=value, group=FullName, size = 1)) +
             scale_x_discrete(limits=c("StatShootingProne1617", "StatShootingProne1718", "StatShootingProne1819", "StatShootingProne1920"))+
@@ -191,7 +200,7 @@ server = function(input, output, session) {
             ylim(65,100)
     })
     
-    #outputchart2
+    #outputchart4
     output$plotski4 <- renderPlot({
         ggplot(data = standingstats(), mapping = aes(x=variable ,y=value, group=FullName, size = 1)) +
             scale_x_discrete(limits=c("StatShootingStanding1617", "StatShootingStanding1718", "StatShootingStanding1819", "StatShootingStanding1920"))+
@@ -199,7 +208,32 @@ server = function(input, output, session) {
             geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
             theme_minimal()+
-            ylim(65,100)
+            ylim(0,100)
+    })
+    
+    #outputchart5
+    output$plotski5 <- renderPlot({
+        ggplot(data = shootingcombostats(), aes(x = season, group=FullName)) + 
+            #adding lines
+            geom_line(lineend="round",color="#009CD9",aes(y = ShootTTL,colour = "Total", linetype = "solid", size=1.04, alpha=0.4)) + 
+            geom_line(lineend="round",color="#D8E935",aes(y = ShootPRO,colour = "Prone", linetype = "solid", size=1.005, alpha=0.4)) +
+            geom_line(lineend="round",color="#A2BF15",aes(y = ShootSTA,colour = "Standing", linetype = "solid", size=1.005, alpha=0.4))+
+            #adding points
+            geom_point(color="#009CD9",aes(y = ShootTTL,colour = "Total", size=1.04, alpha=0.4)) + 
+            geom_point(color="#D8E935",aes(y = ShootPRO,colour = "Prone", size=1, alpha=0.4)) +
+            geom_point(color="#A2BF15",aes(y = ShootSTA,colour = "Standing", size=1, alpha=0.4))+
+            #background them
+            theme_minimal()+
+            geom_text(aes(x=season, y=ShootTTL, label=ShootTTL, size=1.02))+
+            geom_text(aes(x=season, y=ShootPRO, label=ShootPRO, size=1.005))+
+            geom_text(aes(x=season, y=ShootSTA, label=ShootSTA, size=1.005))+
+            geom_text(color="#009CD9", aes(x=season, y=ShootTTL, label=ifelse(as.character(season) == "1920", "Total",""), size=1.02, hjust = -0.25))+
+            geom_text(color="#D8E935", aes(x=season, y=ShootPRO, label=ifelse(as.character(season) == "1920", "Prone",""), size=1.008, hjust = -0.25))+
+            geom_text(color="#A2BF15", aes(x=season, y=ShootSTA, label=ifelse(as.character(season) == "1920", "Standing",""), size=1.008, hjust = -0.25))+
+            guides(size=FALSE)+
+            guides(alpha=FALSE)+
+            guides(linetype=FALSE)+
+            labs(x= "Season", y = "Shooting percentage")
     })
 }
 
