@@ -7,14 +7,6 @@ library(tidyr)
 library(purrr)
 library(ggplot2)
 
-require(rjson)
-require(tidyverse)
-require(httr)
-require(jsonlite)
-require(tidyr)
-require(purrr)
-require(ggplot2)
-
 #########################################################################
 
 # GET A LIST OF ALL ATHLETES for a season
@@ -159,6 +151,13 @@ BiosStatsStandV <- melt(BiosStatsStand, id=(c("IBUId", "FullName")))
 BiosStatsProneV <- melt(BiosStatsProne, id=(c("IBUId", "FullName")))
 BiosStatsSkiV <- BiosStatsSkiV[order(BiosStatsSkiV$variable ,decreasing = TRUE),]
 
+# Write these file to the working directory
+write.csv(Bios, "Bios.csv", row.names = TRUE)
+write.csv(BiosStatsSkiV, "BiosStatsSkiV.csv", row.names = TRUE)
+write.csv(BiosStatsShootV, "BiosStatsShootV.csv", row.names = TRUE)
+write.csv(BiosStatsProneV, "BiosStatsProneV.csv", row.names = TRUE)
+write.csv(BiosStatsStandV, "BiosStatsStandV.csv", row.names = TRUE)
+
 #create subset with shooting stats for 2016-2017 to 2019-2020
 BiosStatsShoot <- Bios[,c(1,2,18,19,20,21)]
 #clean % symbols
@@ -217,3 +216,56 @@ Testshoot <- BiosStatsShootV[c(6,149,292,435),1:4]
     
 # trying to add the average per variable
 aggregate(x = as.integer(BiosStatsSkiV$value), by=list(BiosStatsSkiV$variable), FUN = 'mean', na.rm=TRUE)
+
+# Merging the three shooting stats data frames into one
+  # Creating sets per shooting type with only four digits for season to be consistent
+  BiosStatsShootVx <- data.frame(BiosStatsShootV[,1:2], str_sub(BiosStatsShootV[,3],-4,-1),BiosStatsShootV[,4])
+  BiosStatsStandVx <- data.frame(BiosStatsStandV[,1:2], str_sub(BiosStatsStandV[,3],-4,-1),BiosStatsStandV[,4])
+  BiosStatsProneVx <- data.frame(BiosStatsProneV[,1:2], str_sub(BiosStatsProneV[,3],-4,-1),BiosStatsProneV[,4])
+  #rename header of third column
+  names(BiosStatsShootVx)[3] <- "season"
+  names(BiosStatsStandVx)[3] <- "season"
+  names(BiosStatsProneVx)[3] <- "season"
+  # joining Shoot and Prone, and then join that result to Stand
+  ShootingTotalProne <- merge(BiosStatsShootVx,BiosStatsProneVx,by=c("IBUId","season"))
+  ShootingTotalProneStand <- merge(ShootingTotalProne,BiosStatsStandVx,by=c("IBUId","season"))
+  # Create final file
+    # reorder columns
+    BiosStatsShootingTtlProStaV <- ShootingTotalProneStand[,c(1,3,2,4,6,8)]
+    #rename columns
+    names(BiosStatsShootingTtlProStaV)[2] <- "FullName"
+    names(BiosStatsShootingTtlProStaV)[4] <- "ShootTTL"
+    names(BiosStatsShootingTtlProStaV)[5] <- "ShootPRO"
+    names(BiosStatsShootingTtlProStaV)[6] <- "ShootSTA"
+    # sort by Full Names and Season
+    BiosStatsShootingTtlProStaV <- BiosStatsShootingTtlProStaV[order(BiosStatsShootingTtlProStaV$FullName,BiosStatsShootingTtlProStaV$season),]
+    write.csv(BiosStatsShootingTtlProStaV, "BiosStatsShootingTtlProStaV.csv", row.names = TRUE)
+    
+# some more ggplot testing
+# filtering to one athlete
+    OneBio <- subset(BiosStatsShootingTtlProStaV, FullName == "Tiril ECKHOFF")
+#chart
+    ggplot(data = OneBio, aes(x = season, group=FullName)) + 
+      #adding lines
+      geom_line(lineend="round",color="#009CD9",aes(y = ShootTTL,colour = "Total", linetype = "solid", size=1.04, alpha=0.4)) + 
+      geom_line(lineend="round",color="#D8E935",aes(y = ShootPRO,colour = "Prone", linetype = "solid", size=1.005, alpha=0.4)) +
+      geom_line(lineend="round",color="#A2BF15",aes(y = ShootSTA,colour = "Standing", linetype = "solid", size=1.005, alpha=0.4))+
+      #adding points
+      geom_point(color="#009CD9",aes(y = ShootTTL,colour = "Total", size=1.04, alpha=0.4)) + 
+      geom_point(color="#D8E935",aes(y = ShootPRO,colour = "Prone", size=1, alpha=0.4)) +
+      geom_point(color="#A2BF15",aes(y = ShootSTA,colour = "Standing", size=1, alpha=0.4))+
+      #background them
+      theme_minimal()+
+      geom_text(aes(x=season, y=ShootTTL, label=ShootTTL, size=1.02))+
+      geom_text(aes(x=season, y=ShootPRO, label=ShootPRO, size=1.005))+
+      geom_text(aes(x=season, y=ShootSTA, label=ShootSTA, size=1.005))+
+      geom_text(color="#009CD9", aes(x=season, y=ShootTTL, label=ifelse(as.character(season) == "1920", "Total",""), size=1.02, hjust = -0.25))+
+      geom_text(color="#D8E935", aes(x=season, y=ShootPRO, label=ifelse(as.character(season) == "1920", "Prone",""), size=1.008, hjust = -0.25))+
+      geom_text(color="#A2BF15", aes(x=season, y=ShootSTA, label=ifelse(as.character(season) == "1920", "Standing",""), size=1.008, hjust = -0.25))+
+      guides(size=FALSE)+
+      guides(alpha=FALSE)+
+      guides(linetype=FALSE)+
+      labs(x= "Season", y = "Shooting percentage")
+      
+    
+    
