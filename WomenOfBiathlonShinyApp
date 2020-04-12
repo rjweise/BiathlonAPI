@@ -32,6 +32,7 @@ ui = fluidPage(
 
     fluidRow(
     sidebarPanel(
+        width = 3,
         selectizeInput(inputId = 'var1', label='Select an athlete below:', choices = c("click to see list; type name to filter" = "", as.character(Bios$FullName)), multiple = FALSE,  selected = "Denise HERRMANN")
         , "After you select an athlete, it will show a few tables and a picture on the right"
         , br()
@@ -48,7 +49,7 @@ ui = fluidPage(
     
     # This puts all the objects on the page in the main panel
     mainPanel(
-        
+        width = 8,
         fluidRow(
                 column(4,"Relative skiing performance"),    
                 column(4,"Shooting performance")    
@@ -72,7 +73,8 @@ ui = fluidPage(
     tags$hr(),
     
     fluidRow(
-        plotOutput("plotski5")
+        column(3, "This last chart shows the three shooting charts, Prone, Combined (total) and Standing combined in one:"),
+        column(4, plotOutput("plotski5"))
     ),
     fluidRow()
     ,
@@ -177,12 +179,14 @@ server = function(input, output, session) {
     #output$chart1
     output$plotski <-renderPlot({
         ggplot(data = skierstats(), mapping = aes(x=variable ,y=value, group=FullName, size = 0.2)) +
-            scale_x_discrete(limits=c("StatSkiing1617", "StatSkiing1718", "StatSkiing1819", "StatSkiing1920"))+
+            scale_x_discrete(limits=c("StatSkiing1617", "StatSkiing1718", "StatSkiing1819", "StatSkiing1920"), labels=c("1617","1718","1819","1920"))+
             geom_path(color = "#0097c9", show.legend=FALSE)+
             geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue")+
             geom_hline(yintercept =5, color="red")+
             geom_hline(yintercept =-5, color="green")+
+            annotate("rect", ymin = 0, ymax = -10, xmin = "StatSkiing1617", xmax = "StatSkiing1920", alpha=.04, fill="green")+
+            annotate("rect", ymin = 0, ymax = 10, xmin = "StatSkiing1617", xmax = "StatSkiing1920", alpha=.04, fill="red")+
             theme_minimal()+
             ylim(10,-10)
     })
@@ -190,31 +194,34 @@ server = function(input, output, session) {
     #outputchart2
     output$plotski2 <- renderPlot({
         ggplot(data = shootingstats(), mapping = aes(x=variable ,y=value, group=FullName, size = 0.5)) +
-            scale_x_discrete(limits=c("StatShooting1617", "StatShooting1718", "StatShooting1819", "StatShooting1920"))+
+            scale_x_discrete(limits=c("StatShooting1617", "StatShooting1718", "StatShooting1819", "StatShooting1920"), labels=c("1617","1718","1819","1920"))+
             geom_path(color = "#0097c9",show.legend=FALSE)+
             geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
-            theme_minimal()
+            theme_minimal()+
+            ylim(50,100)
     })
     
     #outputchart3
     output$plotski3 <- renderPlot({
         ggplot(data = pronestats(), mapping = aes(x=variable ,y=value, group=FullName, size = 1)) +
-            scale_x_discrete(limits=c("StatShootingProne1617", "StatShootingProne1718", "StatShootingProne1819", "StatShootingProne1920"))+
+            scale_x_discrete(limits=c("StatShootingProne1617", "StatShootingProne1718", "StatShootingProne1819", "StatShootingProne1920"), labels=c("1617","1718","1819","1920"))+
             geom_path(color = "#0097c9",show.legend=FALSE)+
             geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
-            theme_minimal()
+            theme_minimal()+
+            ylim(50,100)
     })
     
     #outputchart4
     output$plotski4 <- renderPlot({
         ggplot(data = standingstats(), mapping = aes(x=variable ,y=value, group=FullName, size = 1)) +
-            scale_x_discrete(limits=c("StatShootingStanding1617", "StatShootingStanding1718", "StatShootingStanding1819", "StatShootingStanding1920"))+
+            scale_x_discrete(limits=c("StatShootingStanding1617", "StatShootingStanding1718", "StatShootingStanding1819", "StatShootingStanding1920"), labels=c("1617","1718","1819","1920"))+
             geom_path(color = "#0097c9",show.legend=FALSE)+
             geom_point(show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
-            theme_minimal()
+            theme_minimal()+
+            ylim(50,100)
     })
     
     #outputchart5
