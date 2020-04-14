@@ -5,7 +5,7 @@ library(rsconnect)
 library(shiny)
 
 #Connecting to Shinyapps.io
-rsconnect::setAccountInfo(name='rjweise', token='7E21A201D313E81B4C8C7F5C5A6281E2', secret='g6SjLX8pTXYOHuJXz97BWBPho+Zsvny1UJgTS3iU')
+rsconnect::setAccountInfo(name='*', token='*', secret='*')
 #rsconnect::deployApp('WomenOfBiathlon')
 
 # LOADING DATA
