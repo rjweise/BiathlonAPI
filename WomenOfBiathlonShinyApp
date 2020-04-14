@@ -2,9 +2,10 @@
 library(dplyr)
 library(ggplot2)
 library(rsconnect)
+library(shiny)
 
 #Connecting to Shinyapps.io
-rsconnect::setAccountInfo(name='***', token='***', secret='***')
+rsconnect::setAccountInfo(name='rjweise', token='7E21A201D313E81B4C8C7F5C5A6281E2', secret='g6SjLX8pTXYOHuJXz97BWBPho+Zsvny1UJgTS3iU')
 #rsconnect::deployApp('WomenOfBiathlon')
 
 # LOADING DATA
@@ -27,12 +28,13 @@ BiosStatsShootingTtlProStaV$FullName <- as.character(BiosStatsShootingTtlProStaV
 
 # USER INTERFACE
 ui = fluidPage(
-    tags$h1("Women of Biathlon"),
-    tags$h3("A tool for exploring the female biathlon athletes bios and their stats"),
+    style="background-color:#063247", #This sets the background color of the app's fluidpage area (which is whole)
+    tags$h1("Women of Biathlon",style="color:white"),
+    tags$h3("A tool for exploring the female biathlon athletes bios and their stats", style="color:#CFDC08"),
 
     fluidRow(
     sidebarPanel(
-        width = 3,
+        width = 4,
         selectizeInput(inputId = 'var1', label='Select an athlete below:', choices = c("click to see list; type name to filter" = "", as.character(Bios$FullName)), multiple = FALSE,  selected = "Denise HERRMANN")
         , "After you select an athlete, it will show a few tables and a picture on the right"
         , br()
@@ -51,35 +53,28 @@ ui = fluidPage(
     mainPanel(
         width = 8,
         fluidRow(
-                column(4,"Relative skiing performance"),    
-                column(4,"Shooting performance")    
-        ),
-        fluidRow(
                 column(4,plotOutput("plotski")),
                 column(4,plotOutput("plotski2"))
         ),
-        tags$hr(),
-        fluidRow(
-            column(4,"Prone shooting performance"),    
-            column(4,"Standing shooting performance")    
-        ),
+        tags$hr(style="color:#CFDC08"),
         fluidRow(
                 column(4,plotOutput("plotski3")),
                 column(4,plotOutput("plotski4"))
-        )
+        ),style="color:white"
     ),
     ),
     tags$hr(),
-    tags$hr(),
+#    tags$hr(),
     
     fluidRow(
         column(3, "This last chart shows the three shooting charts, Prone, Combined (total) and Standing combined in one:"),
         column(4, plotOutput("plotski5"))
-    ),
+        ,style="color:white"),
     fluidRow()
     ,
     fluidRow(
-        tags$p("All data is from the ", tags$a(href="https://biathlonresults.com/", "IBU's Biathlon Result website"))
+        tags$p("All data is from the ", tags$a(href="https://biathlonresults.com/", "IBU's Biathlon Result website")
+        ,style="color:white")
     )
 )
 
@@ -153,14 +148,6 @@ server = function(input, output, session) {
     output$table1 <- renderTable({
         tab()
     })
-    # Render the table for address     
-    #output$table2 <- renderTable({
-    #  address()
-    #})
-    # Render the table for flag   
-    #output$table3 <- renderTable({
-    #  flag()
-    #})
     # Render the iframe for getPage (athlete picture)   
     output$inc <- renderUI({
         x <- input$var1  
@@ -177,51 +164,68 @@ server = function(input, output, session) {
     })
     
     #output$chart1
+    
+    theme_set(theme_IBU()) # This calls the theme_IBU() function, which changes the theme_minimal to look more like the IBUsite. If it's not there, run the BiathlonTheme.r script
+    
     output$plotski <-renderPlot({
         ggplot(data = skierstats(), mapping = aes(x=variable ,y=value, group=FullName, size = 0.2)) +
+            ggtitle("Skiing Performance") +
             scale_x_discrete(limits=c("StatSkiing1617", "StatSkiing1718", "StatSkiing1819", "StatSkiing1920"), labels=c("1617","1718","1819","1920"))+
-            geom_path(color = "#0097c9", show.legend=FALSE)+
-            geom_point(show.legend=FALSE)+
-            geom_hline(yintercept=0, linetype="dashed", color = "blue")+
-            geom_hline(yintercept =5, color="red")+
-            geom_hline(yintercept =-5, color="green")+
-            annotate("rect", ymin = 0, ymax = -10, xmin = "StatSkiing1617", xmax = "StatSkiing1920", alpha=.04, fill="green")+
-            annotate("rect", ymin = 0, ymax = 10, xmin = "StatSkiing1617", xmax = "StatSkiing1920", alpha=.04, fill="red")+
-            theme_minimal()+
-            ylim(10,-10)
+            geom_path(colour = "#0097c9", show.legend=FALSE)+
+            geom_point(colour = "#CFDC08", alpha = 0.5, show.legend=FALSE)+
+            geom_hline(yintercept=0, linetype="solid", color = "white", size = 3, alpha = 0.35)+
+            geom_hline(yintercept =5, color="#1F2D40")+
+            geom_hline(yintercept =-5, color="#044740")+
+            annotate(geom="text", x = 2, y=9.5, label="Slower than average", color="#998E95")+
+            annotate(geom="text", x = 2, y=-9.5, label="Faster than average", color="#CFDC0B")+
+            annotate("rect", ymin = 0, ymax = -10, xmin = "StatSkiing1617", xmax = "StatSkiing1920", alpha=.1, fill="green")+
+            annotate("rect", ymin = 0, ymax = 10, xmin = "StatSkiing1617", xmax = "StatSkiing1920", alpha=.1, fill="red")+
+            #theme(panel.background=element_rect(fill = "#063247",colour = NA),
+            #    plot.background = element_rect(fill = "#063247", colour = NA))+
+            ylim(10,-10)+
+            labs(x= "Season", y = "Relative skispeed to average")
     })
     
     #outputchart2
     output$plotski2 <- renderPlot({
         ggplot(data = shootingstats(), mapping = aes(x=variable ,y=value, group=FullName, size = 0.5)) +
+            ggtitle("Combined Shooting Performance") +
             scale_x_discrete(limits=c("StatShooting1617", "StatShooting1718", "StatShooting1819", "StatShooting1920"), labels=c("1617","1718","1819","1920"))+
             geom_path(color = "#0097c9",show.legend=FALSE)+
-            geom_point(show.legend=FALSE)+
+            geom_point(colour = "#CFDC08", alpha = 0.5, show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
-            theme_minimal()+
-            ylim(50,100)
+            #theme(panel.background=element_rect(fill = "#063247", color = "#063247"),
+            #    plot.background = element_rect(fill = "#063247", color = "#063247"))+
+            ylim(50,100)+
+            labs(x= "Season", y = "Shooting % (combined)")
     })
     
     #outputchart3
     output$plotski3 <- renderPlot({
         ggplot(data = pronestats(), mapping = aes(x=variable ,y=value, group=FullName, size = 1)) +
+            ggtitle("Prone Shooting Performance") +
             scale_x_discrete(limits=c("StatShootingProne1617", "StatShootingProne1718", "StatShootingProne1819", "StatShootingProne1920"), labels=c("1617","1718","1819","1920"))+
             geom_path(color = "#0097c9",show.legend=FALSE)+
-            geom_point(show.legend=FALSE)+
+            geom_point(colour = "#CFDC08", alpha = 0.5, show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
-            theme_minimal()+
-            ylim(50,100)
+            #theme(panel.background=element_rect(fill = "#063247", color = "#063247"))+
+            #theme(plot.background = element_rect(fill = "#063247", color = "#063247"))+
+            ylim(50,100)+
+            labs(x= "Season", y = "Shooting % Prone")
     })
     
     #outputchart4
     output$plotski4 <- renderPlot({
         ggplot(data = standingstats(), mapping = aes(x=variable ,y=value, group=FullName, size = 1)) +
+            ggtitle("Standing Shooting Performance") +
             scale_x_discrete(limits=c("StatShootingStanding1617", "StatShootingStanding1718", "StatShootingStanding1819", "StatShootingStanding1920"), labels=c("1617","1718","1819","1920"))+
             geom_path(color = "#0097c9",show.legend=FALSE)+
-            geom_point(show.legend=FALSE)+
+            geom_point(colour = "#CFDC08", alpha = 0.5, show.legend=FALSE)+
             geom_hline(yintercept=0, linetype="dashed", color = "blue", labels("avg."))+
-            theme_minimal()+
-            ylim(50,100)
+            #theme(panel.background=element_rect(fill = "#063247", color = "#063247"))+
+            #theme(plot.background = element_rect(fill = "#063247", color = "#063247"))+
+            ylim(50,100)+
+            labs(x= "Season", y = "Shooting % Standing")
     })
     
     #outputchart5
@@ -236,17 +240,18 @@ server = function(input, output, session) {
             geom_point(color="#D8E935",aes(y = ShootPRO,colour = "Prone", size=1, alpha=0.4)) +
             geom_point(color="#A2BF15",aes(y = ShootSTA,colour = "Standing", size=1, alpha=0.4))+
             #background them
-            theme_minimal()+
-            geom_text(aes(x=as.character(season), y=ShootTTL, label=ShootTTL, size=1.02))+
-            geom_text(aes(x=as.character(season), y=ShootPRO, label=ShootPRO, size=1.005))+
-            geom_text(aes(x=as.character(season), y=ShootSTA, label=ShootSTA, size=1.005))+
+            #theme(panel.background=element_rect(fill = "#063247", color = "#063247"))+
+            #theme(plot.background = element_rect(fill = "#063247", color = "#063247"))+
+            geom_text(colour = "white", aes(x=as.character(season), y=ShootTTL, label=ShootTTL, size=1.02))+
+            geom_text(colour = "white", aes(x=as.character(season), y=ShootPRO, label=ShootPRO, size=1.01))+
+            geom_text(colour = "white", aes(x=as.character(season), y=ShootSTA, label=ShootSTA, size=1.01))+
             geom_text(color="#009CD9", aes(x=as.character(season), y=ShootTTL, label=ifelse(as.character(season) == "1920", "Total",""), size=1.02, hjust = -0.25))+
-            geom_text(color="#D8E935", aes(x=as.character(season), y=ShootPRO, label=ifelse(as.character(season) == "1920", "Prone",""), size=1.008, hjust = -0.25))+
-            geom_text(color="#A2BF15", aes(x=as.character(season), y=ShootSTA, label=ifelse(as.character(season) == "1920", "Standing",""), size=1.008, hjust = -0.25))+
+            geom_text(color="#D8E935", aes(x=as.character(season), y=ShootPRO, label=ifelse(as.character(season) == "1920", "Prone",""), size=1.02, hjust = -0.25))+
+            geom_text(color="#A2BF15", aes(x=as.character(season), y=ShootSTA, label=ifelse(as.character(season) == "1920", "Standing",""), size=1.02, hjust = -0.25))+
             guides(size=FALSE)+
             guides(alpha=FALSE)+
             guides(linetype=FALSE)+
-            labs(x= "Season", y = "Shooting percentage")
+            labs(x= "Season", y = "Shooting %")
     })
 }
 
