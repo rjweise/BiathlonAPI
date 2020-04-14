@@ -266,6 +266,3 @@ aggregate(x = as.integer(BiosStatsSkiV$value), by=list(BiosStatsSkiV$variable), 
       guides(alpha=FALSE)+
       guides(linetype=FALSE)+
       labs(x= "Season", y = "Shooting percentage")
-      
-    
-    
