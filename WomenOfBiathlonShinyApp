@@ -26,6 +26,32 @@ BiosStatsShootingTtlProStaV <- read.csv("BiosStatsShootingTtlProStaV.csv", heade
 BiosStatsShootingTtlProStaV <- BiosStatsShootingTtlProStaV[,2:7]# removing the first column that got added by R
 BiosStatsShootingTtlProStaV$FullName <- as.character(BiosStatsShootingTtlProStaV$FullName) # Convert FullName to character
 
+# LOADING PERSONALIZED THEME
+theme_IBU <- function() {
+    theme_minimal() + 
+        theme(
+            # General elements
+            text = element_text(family = "Helvetica", face = "plain", color = "white"),
+            # Plot elements
+            plot.title = element_text(size = 18, colour = "#CFDC08", face = "bold", hjust = 0.5),
+            plot.background = element_rect(fill = "#063247", colour = NA),
+            # Panel elements
+            panel.background = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.grid.major = element_line(colour = "gray75", size = 0.2),
+            # Axis elements
+            axis.title = element_text(size = 14),
+            axis.text = element_text(size = 12, colour = "white"),
+            axis.line = element_blank(),
+            axis.ticks = element_blank(),
+            # Legend elements
+            legend.background = element_blank(),
+            legend.key = element_blank(),
+            legend.box.background = element_blank(),
+            legend.text = element_text(family = "Helvetica-Narrow", size = 10, colour = "white")
+        )
+}
+
 # USER INTERFACE
 ui = fluidPage(
     style="background-color:#063247", #This sets the background color of the app's fluidpage area (which is whole)
